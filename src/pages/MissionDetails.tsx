@@ -1,0 +1,92 @@
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Clock, MapPin, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import BottomNavigation from "@/components/BottomNavigation";
+
+const missionData: Record<string, { title: string; category: string; location: string; duration: string; level: string; description: string }> = {
+  "1": {
+    title: "Order coffee politely",
+    category: "Travel",
+    location: "Café",
+    duration: "~40 sec",
+    level: "A1–A2",
+    description: "Practice ordering your favorite coffee drink in a friendly café setting. Learn polite phrases and common café vocabulary.",
+  },
+  "2": {
+    title: "Talk about your weekend",
+    category: "Daily small talk",
+    location: "Office",
+    duration: "~60 sec",
+    level: "B1",
+    description: "Master casual conversation about your weekend activities. Perfect for building workplace relationships.",
+  },
+  "3": {
+    title: "Describe a photo",
+    category: "Speaking practice",
+    location: "Any",
+    duration: "~45 sec",
+    level: "A2–B1",
+    description: "Improve your descriptive language skills by talking about what you see in various images.",
+  },
+};
+
+const MissionDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const mission = missionData[id || "1"] || missionData["1"];
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      <div className="max-w-md mx-auto px-4 pt-6">
+        {/* Back button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back</span>
+        </button>
+
+        {/* Mission info */}
+        <div className="animate-fade-in">
+          <h1 className="text-2xl font-bold text-foreground mb-4">{mission.title}</h1>
+          
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            <div className="pill-badge">
+              <span>{mission.category}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+              <MapPin className="w-4 h-4" />
+              <span>{mission.location}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+              <Clock className="w-4 h-4" />
+              <span>{mission.duration}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-primary text-sm font-medium">
+              <BarChart3 className="w-4 h-4" />
+              <span>{mission.level}</span>
+            </div>
+          </div>
+
+          <p className="text-muted-foreground leading-relaxed mb-10">
+            {mission.description}
+          </p>
+
+          {/* CTA Button */}
+          <Button
+            onClick={() => navigate(`/mission/${id}/prompt`)}
+            className="w-full h-14 text-lg font-semibold rounded-2xl glow-effect"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            Start Mission
+          </Button>
+        </div>
+      </div>
+
+      <BottomNavigation />
+    </div>
+  );
+};
+
+export default MissionDetails;
