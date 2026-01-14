@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Mic, Volume2, Type, ChevronLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -11,6 +12,7 @@ const tutorPhrases = [
 ];
 
 const Tutor = () => {
+  const navigate = useNavigate();
   const [isRecording, setIsRecording] = useState(false);
   const [showPhonetics, setShowPhonetics] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<"normal" | "slow">("normal");
@@ -43,7 +45,7 @@ const Tutor = () => {
       <div className="max-w-md mx-auto px-4">
         {/* Header */}
         <div className="flex items-center justify-between pt-8 pb-4 animate-fade-in">
-          <button className="text-primary">
+          <button onClick={() => navigate(-1)} className="text-primary">
             <ChevronLeft className="w-6 h-6" />
           </button>
           <h1 className="text-lg font-semibold text-foreground">AI tutor</h1>

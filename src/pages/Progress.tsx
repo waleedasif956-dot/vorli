@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Rocket, Mic, BarChart3, Flame, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -38,6 +39,8 @@ const stats = [
 ];
 
 const Progress = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-background pb-28">
       <div className="max-w-md mx-auto px-4 pt-10">
@@ -121,6 +124,7 @@ const Progress = () => {
 
         {/* CTA */}
         <Button
+          onClick={() => navigate("/missions")}
           className="w-full h-14 text-base font-semibold rounded-2xl glow-effect animate-fade-in bg-primary hover:bg-primary/90"
           style={{ animationDelay: "400ms" }}
         >
