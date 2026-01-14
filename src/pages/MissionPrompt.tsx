@@ -123,7 +123,7 @@ const MissionPrompt = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(`/mission/${id}`)}
               className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -237,7 +237,7 @@ const MissionPrompt = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6 animate-fade-in">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(`/mission/${id}`)}
             className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
