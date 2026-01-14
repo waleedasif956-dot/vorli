@@ -55,7 +55,10 @@ const MissionPrompt = () => {
     setIsRecording(true);
     setShowHint(false);
     resetSpeech();
-    startListening();
+    // Small delay to ensure reset is complete before starting
+    setTimeout(() => {
+      startListening();
+    }, 100);
   }, [startListening, resetSpeech]);
 
   const handleRecordEnd = useCallback(() => {
@@ -63,15 +66,17 @@ const MissionPrompt = () => {
       setIsRecording(false);
       stopListening();
       
-      // Wait a moment for final results
+      // Wait a moment for final results to be captured
       setTimeout(() => {
+        // Only use real data - if nothing was captured, show a helpful message
+        const hasRealData = transcript && transcript.length > 0;
         setFinalScore({
-          accuracy: accuracy || Math.floor(Math.random() * 20) + 75,
-          confidence: confidence || Math.floor(Math.random() * 15) + 80,
-          transcript: transcript || "Speech captured"
+          accuracy: hasRealData ? accuracy : 0,
+          confidence: hasRealData ? confidence : 0,
+          transcript: hasRealData ? transcript : "No speech detected. Please try again and speak clearly."
         });
         setShowResults(true);
-      }, 500);
+      }, 300);
     }
   }, [isRecording, stopListening, accuracy, confidence, transcript]);
 
