@@ -11,6 +11,7 @@ export const useCamera = (options: UseCameraOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -52,6 +53,33 @@ export const useCamera = (options: UseCameraOptions = {}) => {
     }
   }, [stream]);
 
+  const captureFrame = useCallback((): string | null => {
+    if (!videoRef.current || !isActive) {
+      return null;
+    }
+
+    const video = videoRef.current;
+    
+    // Create canvas if it doesn't exist
+    if (!canvasRef.current) {
+      canvasRef.current = document.createElement('canvas');
+    }
+    
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return null;
+    }
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Return base64 data URL
+    return canvas.toDataURL('image/jpeg', 0.8);
+  }, [isActive]);
+
   useEffect(() => {
     return () => {
       if (stream) {
@@ -67,5 +95,6 @@ export const useCamera = (options: UseCameraOptions = {}) => {
     startCamera,
     stopCamera,
     setVideoRef,
+    captureFrame,
   };
 };

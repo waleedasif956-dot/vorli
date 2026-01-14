@@ -1,24 +1,27 @@
 import { useState, useEffect, useRef } from "react";
-import { Zap, X, Search, Coffee, Monitor, BookOpen, Play, Camera, AlertCircle } from "lucide-react";
+import { Zap, X, Search, Play, Camera, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useNavigate } from "react-router-dom";
 import { useCamera } from "@/hooks/useCamera";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const objects = [
-  { id: "cup", label: "tasse", icon: Coffee, x: "25%", y: "70%" },
-  { id: "laptop", label: "ordinateur", icon: Monitor, x: "55%", y: "35%" },
-  { id: "notebook", label: "cahier", icon: BookOpen, x: "75%", y: "55%" },
-];
+interface RecognizedObject {
+  id: string;
+  label: string;
+  englishLabel: string;
+  confidence: number;
+}
 
 const CameraLearn = () => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [selectedObject, setSelectedObject] = useState<string | null>(null);
-  const [scannedObjects, setScannedObjects] = useState<string[]>([]);
+  const [scannedObjects, setScannedObjects] = useState<RecognizedObject[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   
-  const { isActive, error, startCamera, stopCamera, setVideoRef } = useCamera({ 
+  const { isActive, error, startCamera, stopCamera, setVideoRef, captureFrame } = useCamera({ 
     facingMode: "environment" 
   });
 
@@ -37,16 +40,78 @@ const CameraLearn = () => {
     }
   }, [setVideoRef]);
 
-  const handleScan = () => {
+  const handleScan = async () => {
+    if (isScanning) return;
+    
     setIsScanning(true);
-    // Simulate scanning delay and reveal objects
-    setTimeout(() => {
-      setScannedObjects(["cup", "laptop", "notebook"]);
+    
+    try {
+      // Capture frame from video
+      const imageData = captureFrame();
+      
+      if (!imageData) {
+        toast.error("Could not capture image. Make sure camera is active.");
+        setIsScanning(false);
+        return;
+      }
+
+      console.log("Sending image for recognition...");
+      
+      // Call edge function
+      const { data, error: fnError } = await supabase.functions.invoke('recognize-objects', {
+        body: { image: imageData }
+      });
+
+      if (fnError) {
+        console.error("Function error:", fnError);
+        toast.error("Failed to analyze image. Please try again.");
+        setIsScanning(false);
+        return;
+      }
+
+      if (data.error) {
+        console.error("API error:", data.error);
+        if (data.error.includes("Rate limit")) {
+          toast.error("Too many requests. Please wait a moment.");
+        } else if (data.error.includes("credits")) {
+          toast.error("AI credits exhausted. Please add more credits.");
+        } else {
+          toast.error(data.error);
+        }
+        setIsScanning(false);
+        return;
+      }
+
+      const objects = data.objects || [];
+      console.log("Recognized objects:", objects);
+      
+      if (objects.length === 0) {
+        toast.info("No objects detected. Try pointing at different items.");
+      } else {
+        toast.success(`Found ${objects.length} object${objects.length > 1 ? 's' : ''}!`);
+        setScannedObjects(objects);
+      }
+      
+    } catch (err) {
+      console.error("Scan error:", err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setIsScanning(false);
-    }, 1500);
+    }
   };
 
-  const foundWords = objects.filter(obj => scannedObjects.includes(obj.id));
+  // Generate random positions for detected objects
+  const getObjectPosition = (index: number, total: number) => {
+    const positions = [
+      { x: "25%", y: "30%" },
+      { x: "70%", y: "25%" },
+      { x: "20%", y: "60%" },
+      { x: "75%", y: "55%" },
+      { x: "50%", y: "45%" },
+      { x: "40%", y: "70%" },
+    ];
+    return positions[index % positions.length];
+  };
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -94,10 +159,11 @@ const CameraLearn = () => {
 
           {/* Scanning overlay */}
           {isScanning && (
-            <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-20">
+            <div className="absolute inset-0 bg-primary/10 flex flex-col items-center justify-center z-20">
               <div className="scan-line" />
-              <div className="text-white text-lg font-medium animate-pulse">
-                Scanning...
+              <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+              <div className="text-white text-lg font-medium">
+                Analyzing...
               </div>
             </div>
           )}
@@ -105,9 +171,14 @@ const CameraLearn = () => {
           {/* Flash/Scan button - top left */}
           <button 
             onClick={handleScan}
-            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center backdrop-blur-sm z-10 active:scale-95 transition-transform"
+            disabled={isScanning}
+            className="absolute top-4 left-4 w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center backdrop-blur-sm z-10 active:scale-95 transition-transform disabled:opacity-50"
           >
-            <Zap className="w-5 h-5 text-white" />
+            {isScanning ? (
+              <Loader2 className="w-5 h-5 text-white animate-spin" />
+            ) : (
+              <Zap className="w-5 h-5 text-white" />
+            )}
           </button>
 
           {/* Close button - top right */}
@@ -132,15 +203,16 @@ const CameraLearn = () => {
           </button>
 
           {/* Tappable object labels - only show after scanning */}
-          {scannedObjects.length > 0 && objects.map((obj) => {
+          {scannedObjects.length > 0 && scannedObjects.map((obj, index) => {
             const isSelected = selectedObject === obj.id;
+            const position = getObjectPosition(index, scannedObjects.length);
             
             return (
               <button
-                key={obj.id}
+                key={`${obj.id}-${index}`}
                 onClick={() => setSelectedObject(isSelected ? null : obj.id)}
                 className="absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 animate-scale-in z-10"
-                style={{ left: obj.x, top: obj.y }}
+                style={{ left: position.x, top: position.y, animationDelay: `${index * 100}ms` }}
               >
                 <div
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
@@ -150,6 +222,9 @@ const CameraLearn = () => {
                   }`}
                 >
                   {obj.label}
+                  {isSelected && (
+                    <span className="block text-xs opacity-80 mt-0.5">{obj.englishLabel}</span>
+                  )}
                 </div>
               </button>
             );
@@ -176,22 +251,27 @@ const CameraLearn = () => {
 
           {/* Words List */}
           <div className="glass-card rounded-2xl p-4 mb-4 space-y-3 min-h-[120px]">
-            {foundWords.length > 0 ? (
-              foundWords.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-4 animate-fade-in"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-muted-foreground" />
+            {scannedObjects.length > 0 ? (
+              scannedObjects.map((item, index) => (
+                <div
+                  key={`${item.id}-${index}`}
+                  className="flex items-center justify-between animate-fade-in"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-lg">
+                      🏷️
                     </div>
-                    <span className="text-foreground font-medium">{item.label}</span>
+                    <div>
+                      <span className="text-foreground font-medium">{item.label}</span>
+                      <span className="text-muted-foreground text-sm ml-2">({item.englishLabel})</span>
+                    </div>
                   </div>
-                );
-              })
+                  <div className="text-xs text-muted-foreground">
+                    {Math.round(item.confidence * 100)}%
+                  </div>
+                </div>
+              ))
             ) : (
               <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
                 <Camera className="w-8 h-8 mb-2 opacity-50" />
@@ -203,10 +283,10 @@ const CameraLearn = () => {
           {/* CTA Button */}
           <Button
             onClick={() => navigate("/mission/1")}
-            disabled={foundWords.length === 0}
+            disabled={scannedObjects.length === 0}
             className="w-full h-14 text-base font-semibold rounded-2xl glow-effect"
             style={{ 
-              background: foundWords.length > 0 
+              background: scannedObjects.length > 0 
                 ? "linear-gradient(90deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%)" 
                 : undefined 
             }}
