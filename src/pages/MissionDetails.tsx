@@ -69,9 +69,24 @@ const MissionDetails = () => {
             </div>
           </div>
 
-          <p className="text-muted-foreground leading-relaxed mb-10">
-            {mission.description}
-          </p>
+          {/* Glass card for description */}
+          <div className="glass-card rounded-2xl p-5 mb-8">
+            <p className="text-muted-foreground leading-relaxed">
+              {mission.description}
+            </p>
+          </div>
+
+          {/* What you'll practice */}
+          <div className="mb-8">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">What you'll practice</h3>
+            <div className="flex flex-wrap gap-2">
+              {["Ordering", "Polite phrases", "Questions", "Numbers"].map((skill) => (
+                <span key={skill} className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
 
           {/* CTA Button */}
           <Button
