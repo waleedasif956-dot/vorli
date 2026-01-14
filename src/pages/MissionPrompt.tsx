@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Lightbulb, SkipForward, RotateCcw, ChevronRight, Mic } from "lucide-react";
+import { ArrowLeft, Lightbulb, SkipForward, RotateCcw, ChevronRight, Mic, Plane, Clock, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AudioWaveform from "@/components/AudioWaveform";
 import RecordingTimer from "@/components/RecordingTimer";
@@ -80,7 +80,7 @@ const MissionPrompt = () => {
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -155,8 +155,7 @@ const MissionPrompt = () => {
             <div className="w-full space-y-3 animate-fade-in" style={{ animationDelay: "300ms" }}>
               <Button
                 onClick={handleNext}
-                className="w-full h-14 text-lg font-semibold rounded-2xl glow-effect"
-                style={{ background: "var(--gradient-primary)" }}
+                className="w-full h-14 text-lg font-semibold rounded-2xl glow-effect bg-gradient-to-r from-primary via-secondary to-accent"
               >
                 {currentPromptIndex < totalPrompts - 1 ? (
                   <>Next Mission <ChevronRight className="w-5 h-5 ml-2" /></>
@@ -183,36 +182,57 @@ const MissionPrompt = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <div className="max-w-md mx-auto px-4 pt-6 flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 animate-fade-in">
+        <div className="flex items-center justify-between mb-6 animate-fade-in">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="text-sm text-muted-foreground">
-            Mission {currentPromptIndex + 1}/{totalPrompts}
+          
+          {/* Category Pill */}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-muted/30">
+            <Plane className="w-4 h-4 text-primary" />
+            <span className="text-sm text-foreground">Travel · Café · 30s</span>
+            <Video className="w-4 h-4 text-muted-foreground" />
           </div>
-          <button
-            onClick={handleSkip}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <SkipForward className="w-5 h-5" />
-          </button>
+          
+          <div className="text-sm text-muted-foreground">
+            Mission<br/>{currentPromptIndex + 1}/{totalPrompts}
+          </div>
         </div>
 
-        {/* Prompt Area */}
+        {/* XP Badge */}
+        <div className="flex justify-end mb-4 animate-fade-in">
+          <div className="px-3 py-1 rounded-lg bg-muted/60 border border-border/50">
+            <span className="text-sm font-medium text-foreground">+25 XP</span>
+          </div>
+        </div>
+
+        {/* Prompt Card */}
         <div className="flex-1 flex flex-col items-center justify-center px-4">
-          <div className="text-center mb-8 animate-fade-in">
-            <p className="text-sm text-primary font-medium mb-4">Say it in English</p>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-relaxed">
-              "{currentPrompt.text}"
+          <div className="glass-card rounded-3xl p-6 w-full mb-6 animate-scale-in relative">
+            {/* Progress indicator on right */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary" />
+              <div className="w-0.5 h-12 bg-gradient-to-b from-primary to-transparent" />
+            </div>
+            
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-relaxed pr-8">
+              {currentPrompt.text}
             </h1>
+            <p className="text-muted-foreground mt-3">Say it in English</p>
+          </div>
+
+          {/* Level Indicator */}
+          <div className="flex items-center gap-2 text-muted-foreground text-sm mb-8 animate-fade-in">
+            <Mic className="w-4 h-4" />
+            <span>Level A1–A2 · Speaking mission</span>
           </div>
 
           {/* Hint */}
           {showHint && (
-            <div className="glass-card p-4 rounded-2xl mb-8 animate-scale-in w-full">
+            <div className="glass-card p-4 rounded-2xl mb-6 animate-scale-in w-full">
               <div className="flex items-start gap-3">
                 <Lightbulb className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
@@ -225,7 +245,7 @@ const MissionPrompt = () => {
 
           {/* Recording State */}
           {isRecording && (
-            <div className="mb-8 animate-fade-in">
+            <div className="mb-6 animate-fade-in">
               <RecordingTimer isRecording={isRecording} />
               <AudioWaveform isActive={isRecording} barCount={7} className="mt-4" />
             </div>
@@ -234,18 +254,8 @@ const MissionPrompt = () => {
 
         {/* Bottom Controls */}
         <div className="pb-12 animate-slide-up">
-          {!showHint && !isRecording && (
-            <button
-              onClick={() => setShowHint(true)}
-              className="mx-auto flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-            >
-              <Lightbulb className="w-4 h-4" />
-              <span className="text-sm">Show Hint</span>
-            </button>
-          )}
-
           {/* Mic Button */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center mb-6">
             <button
               onMouseDown={handleRecordStart}
               onMouseUp={handleRecordEnd}
@@ -259,9 +269,25 @@ const MissionPrompt = () => {
                 <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-ping" />
               )}
             </button>
-            <p className="text-muted-foreground text-sm mt-4">
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between px-4">
+            <button
+              onClick={handleSkip}
+              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+            >
+              Skip
+            </button>
+            <span className="text-muted-foreground text-sm">
               {isRecording ? "Release to finish" : "Hold to speak"}
-            </p>
+            </span>
+            <button
+              onClick={() => setShowHint(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+            >
+              Show hint
+            </button>
           </div>
         </div>
       </div>
