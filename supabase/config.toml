@@ -1,0 +1,4 @@
+project_id = "gjiskywuewbfvhvcrcxi"
+
+[functions.recognize-objects]
+verify_jwt = false
