@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Plane, MessageCircle, Camera, Coffee, Briefcase, Globe } from "lucide-react";
+import { Plane, MessageCircle, Camera, Briefcase, Globe } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
 
 const missions = [
@@ -9,7 +9,9 @@ const missions = [
     category: "Travel",
     duration: "≈ 40 sec",
     level: "A1–A2",
-    gradient: "from-blue-500 via-blue-600 to-purple-600",
+    gradientFrom: "#3b82f6",
+    gradientVia: "#2563eb", 
+    gradientTo: "#7c3aed",
     icon: Plane,
   },
   {
@@ -18,7 +20,9 @@ const missions = [
     category: "Daily small talk",
     duration: "≈ 60 sec",
     level: "B1",
-    gradient: "from-purple-500 via-purple-600 to-pink-500",
+    gradientFrom: "#8b5cf6",
+    gradientVia: "#7c3aed",
+    gradientTo: "#ec4899",
     icon: MessageCircle,
   },
   {
@@ -27,7 +31,9 @@ const missions = [
     category: "Speaking practice",
     duration: "≈ 45 sec",
     level: "A2–B1",
-    gradient: "from-teal-400 via-cyan-400 to-teal-300",
+    gradientFrom: "#14b8a6",
+    gradientVia: "#22d3ee",
+    gradientTo: "#5eead4",
     icon: Camera,
   },
   {
@@ -36,7 +42,9 @@ const missions = [
     category: "Travel",
     duration: "≈ 30 sec",
     level: "A1",
-    gradient: "from-orange-400 via-amber-400 to-yellow-400",
+    gradientFrom: "#f97316",
+    gradientVia: "#fbbf24",
+    gradientTo: "#facc15",
     icon: Globe,
   },
   {
@@ -45,7 +53,9 @@ const missions = [
     category: "Professional",
     duration: "≈ 50 sec",
     level: "B1–B2",
-    gradient: "from-emerald-500 via-green-500 to-teal-500",
+    gradientFrom: "#10b981",
+    gradientVia: "#22c55e",
+    gradientTo: "#14b8a6",
     icon: Briefcase,
   },
 ];
@@ -88,8 +98,11 @@ const Home = () => {
               <button
                 key={mission.id}
                 onClick={() => navigate(`/mission/${mission.id}`)}
-                className={`w-full rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] animate-slide-up bg-gradient-to-br ${mission.gradient} relative overflow-hidden group`}
-                style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                className="w-full rounded-3xl p-5 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] animate-slide-up relative overflow-hidden group"
+                style={{ 
+                  animationDelay: `${(index + 1) * 100}ms`,
+                  background: `linear-gradient(135deg, ${mission.gradientFrom} 0%, ${mission.gradientVia} 50%, ${mission.gradientTo} 100%)`
+                }}
               >
                 {/* Subtle glass overlay */}
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -129,8 +142,11 @@ const Home = () => {
           <div className="flex items-center gap-3 mb-3">
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
               <div 
-                className="h-full rounded-full bg-gradient-to-r from-primary via-secondary to-accent" 
-                style={{ width: "65%" }}
+                className="h-full rounded-full" 
+                style={{ 
+                  width: "65%",
+                  background: "linear-gradient(90deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%)"
+                }}
               />
             </div>
             <span className="text-xs text-muted-foreground whitespace-nowrap">Level 2</span>
