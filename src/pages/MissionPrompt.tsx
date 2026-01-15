@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Lightbulb, RotateCcw, ChevronRight, Mic, Plane, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,17 @@ const MissionPrompt = () => {
     language: "en-US" 
   });
 
+  // Use refs to always get the latest values when recording ends
+  const latestDataRef = useRef({ transcript, accuracy, confidence });
+  useEffect(() => {
+    latestDataRef.current = { transcript, accuracy, confidence };
+  }, [transcript, accuracy, confidence]);
+
+  const isRecordingRef = useRef(isRecording);
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+
   const handleRecordStart = useCallback(() => {
     setIsRecording(true);
     setShowHint(false);
@@ -63,23 +74,23 @@ const MissionPrompt = () => {
   }, [startListening, resetSpeech]);
 
   const handleRecordEnd = useCallback(() => {
-    if (isRecording) {
+    if (isRecordingRef.current) {
       setIsRecording(false);
       stopListening();
       
-      // Wait a moment for final results to be captured
+      // Small delay to ensure we have the latest transcript data
       setTimeout(() => {
-        // Only use real data - if nothing was captured, show a helpful message
-        const hasRealData = transcript && transcript.length > 0;
+        const { transcript: latestTranscript, accuracy: latestAccuracy, confidence: latestConfidence } = latestDataRef.current;
+        const hasRealData = latestTranscript && latestTranscript.length > 0;
         setFinalScore({
-          accuracy: hasRealData ? accuracy : 0,
-          confidence: hasRealData ? confidence : 0,
-          transcript: hasRealData ? transcript : "No speech detected. Please try again and speak clearly."
+          accuracy: hasRealData ? latestAccuracy : 0,
+          confidence: hasRealData ? latestConfidence : 0,
+          transcript: hasRealData ? latestTranscript : "No speech detected. Please try again and speak clearly."
         });
         setShowResults(true);
-      }, 300);
+      }, 400);
     }
-  }, [isRecording, stopListening, accuracy, confidence, transcript]);
+  }, [stopListening]);
 
   const handleNext = () => {
     if (currentPromptIndex < totalPrompts - 1) {
