@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Plane, MessageCircle, Camera, Briefcase, Globe } from "lucide-react";
 import BottomNavigation from "@/components/BottomNavigation";
+import AppHeader from "@/components/AppHeader";
 
 const missions = [
   {
@@ -65,19 +66,9 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <div className="max-w-md mx-auto px-4 pt-12">
+      <div className="max-w-md mx-auto px-4 pt-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 animate-fade-in">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl font-bold text-primary tracking-tight">V</div>
-          </div>
-          <h1 className="text-lg font-semibold text-foreground">For You to Learn</h1>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center border border-border/50">
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-              <span className="text-lg">👤</span>
-            </div>
-          </div>
-        </div>
+        <AppHeader title="For You to Learn" />
 
         {/* Today's Summary Pill */}
         <div className="flex justify-center mb-8 animate-fade-in" style={{ animationDelay: "100ms" }}>

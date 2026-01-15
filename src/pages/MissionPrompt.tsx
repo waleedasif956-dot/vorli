@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Lightbulb, RotateCcw, ChevronRight, Mic, Plane, Video } from "lucide-react";
+import { Lightbulb, RotateCcw, ChevronRight, Mic, Plane, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AudioWaveform from "@/components/AudioWaveform";
 import RecordingTimer from "@/components/RecordingTimer";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import AppHeader from "@/components/AppHeader";
 
 const prompts: Record<string, { text: string; hint: string }[]> = {
   "1": [
@@ -119,20 +120,14 @@ const MissionPrompt = () => {
   if (showResults) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="max-w-md mx-auto px-4 pt-6 flex-1 flex flex-col">
+        <div className="max-w-md mx-auto px-4 pt-8 flex-1 flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={() => navigate(`/mission/${id}`)}
-              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="text-sm text-muted-foreground">
-              Mission {currentPromptIndex + 1}/{totalPrompts}
-            </div>
-            <div className="w-5" />
-          </div>
+          <AppHeader 
+            title={`Mission ${currentPromptIndex + 1}/${totalPrompts}`}
+            showBack 
+            showAvatar={false}
+            onBack={() => navigate(`/mission/${id}`)}
+          />
 
           {/* Results Card */}
           <div className="flex-1 flex flex-col items-center justify-center">
@@ -233,25 +228,21 @@ const MissionPrompt = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="max-w-md mx-auto px-4 pt-6 flex-1 flex flex-col">
+      <div className="max-w-md mx-auto px-4 pt-8 flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 animate-fade-in">
-          <button
-            onClick={() => navigate(`/mission/${id}`)}
-            className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          
-          {/* Category Pill */}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-muted/30">
+        <AppHeader 
+          title={`Mission ${currentPromptIndex + 1}/${totalPrompts}`}
+          showBack 
+          showAvatar={false}
+          onBack={() => navigate(`/mission/${id}`)}
+        />
+
+        {/* Category Pill */}
+        <div className="flex justify-center mb-4 animate-fade-in">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-muted/30 backdrop-blur-sm">
             <Plane className="w-4 h-4 text-primary" />
             <span className="text-sm text-foreground">Travel · Café · 30s</span>
             <Video className="w-4 h-4 text-muted-foreground" />
-          </div>
-          
-          <div className="text-sm text-muted-foreground">
-            Mission<br/>{currentPromptIndex + 1}/{totalPrompts}
           </div>
         </div>
 

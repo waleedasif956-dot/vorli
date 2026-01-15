@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useCamera } from "@/hooks/useCamera";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AppHeader from "@/components/AppHeader";
 
 interface RecognizedObject {
   id: string;
@@ -115,16 +116,19 @@ const CameraLearn = () => {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <div className="max-w-md mx-auto">
-        {/* Header Pill */}
-        <div className="flex justify-center pt-8 pb-4 animate-fade-in">
+      <div className="max-w-md mx-auto px-4 pt-8">
+        {/* Header */}
+        <AppHeader title="Camera Learn" showBack showAvatar={false} />
+
+        {/* Instruction Pill */}
+        <div className="flex justify-center mb-4 animate-fade-in">
           <div className="pill-badge bg-muted/60 backdrop-blur-sm border-border/50">
             <span className="text-foreground/80">Point at objects to learn words</span>
           </div>
         </div>
 
         {/* Camera View */}
-        <div className="relative mx-4 rounded-3xl overflow-hidden animate-scale-in aspect-[4/5]">
+        <div className="relative rounded-3xl overflow-hidden animate-scale-in aspect-[4/5]">
           {/* Real camera feed or fallback */}
           {isActive && !error ? (
             <video

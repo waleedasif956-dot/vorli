@@ -1,9 +1,10 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mic, Volume2, Type, ChevronLeft, Settings } from "lucide-react";
+import { Mic, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
 import AudioWaveform from "@/components/AudioWaveform";
+import AppHeader from "@/components/AppHeader";
 
 const tutorPhrases = [
   { phrase: "Good morning, how are you today?", phonetic: "good MOR-ning, how ar yoo tuh-DAY" },
@@ -42,17 +43,9 @@ const Tutor = () => {
 
   return (
     <div className="min-h-screen bg-background pb-28">
-      <div className="max-w-md mx-auto px-4">
+      <div className="max-w-md mx-auto px-4 pt-8">
         {/* Header */}
-        <div className="flex items-center justify-between pt-8 pb-4 animate-fade-in">
-          <button onClick={() => navigate(-1)} className="text-primary">
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-lg font-semibold text-foreground">AI tutor</h1>
-          <button className="text-primary">
-            <Settings className="w-5 h-5" />
-          </button>
-        </div>
+        <AppHeader title="AI Tutor" showBack showSettings />
 
         {/* Tutor Video Area */}
         <div className="relative rounded-3xl overflow-hidden mb-4 animate-scale-in aspect-[3/4]">
