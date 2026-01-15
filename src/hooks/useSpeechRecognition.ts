@@ -81,15 +81,18 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
-      if (!isStoppingRef.current) {
-        setResult({
-          transcript: "",
-          confidence: 0,
-          accuracy: 0,
-          isListening: true,
-          error: null,
-        });
-      }
+      if (isStoppingRef.current) return;
+
+      // IMPORTANT: Do not wipe transcript/score on every (re)start.
+      // Many browsers (and Android in particular) end+restart recognition while
+      // the user is still holding the mic. If we reset here, the UI (and any
+      // “final score” snapshot) can become empty/0 even though we already had
+      // a good transcript.
+      setResult((prev) => ({
+        ...prev,
+        isListening: true,
+        error: null,
+      }));
     };
 
     recognition.onresult = (event: any) => {
