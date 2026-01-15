@@ -49,7 +49,51 @@ const Tutor = () => {
     isRecordingRef.current = isRecording;
   }, [isRecording]);
 
+  // If the user reaches a strong match while still holding the mic,
+  // auto-finish the attempt so they immediately see the result.
+  const autoEndedRef = useRef(false);
+
+  const handleRecordEnd = useCallback(() => {
+    if (isRecordingRef.current) {
+      setIsRecording(false);
+      stopListening();
+
+      // Small delay to ensure we have the latest transcript data
+      setTimeout(() => {
+        const {
+          transcript: latestTranscript,
+          accuracy: latestAccuracy,
+          confidence: latestConfidence,
+        } = latestDataRef.current;
+        const hasRealData = latestTranscript && latestTranscript.length > 0;
+        setFinalScore({
+          accuracy: hasRealData ? latestAccuracy : 0,
+          confidence: hasRealData ? latestConfidence : 0,
+          transcript: hasRealData
+            ? latestTranscript
+            : "No speech detected. Please try again.",
+        });
+        setShowFeedback(true);
+      }, 400);
+    }
+  }, [stopListening]);
+
+  useEffect(() => {
+    if (!isRecording) return;
+    if (autoEndedRef.current) return;
+    if (!transcript) return;
+
+    // Treat 90%+ as “completed correctly” for auto-finish.
+    if (accuracy >= 90) {
+      autoEndedRef.current = true;
+      // Reuse the same end flow (stop listening + compute finalScore)
+      // so behavior matches releasing the button.
+      handleRecordEnd();
+    }
+  }, [isRecording, transcript, accuracy, handleRecordEnd]);
+
   const handleRecordStart = useCallback(() => {
+    autoEndedRef.current = false;
     setIsRecording(true);
     setShowFeedback(false);
     resetSpeech();
@@ -57,25 +101,6 @@ const Tutor = () => {
       startListening();
     }, 100);
   }, [startListening, resetSpeech]);
-
-  const handleRecordEnd = useCallback(() => {
-    if (isRecordingRef.current) {
-      setIsRecording(false);
-      stopListening();
-      
-      // Small delay to ensure we have the latest transcript data
-      setTimeout(() => {
-        const { transcript: latestTranscript, accuracy: latestAccuracy, confidence: latestConfidence } = latestDataRef.current;
-        const hasRealData = latestTranscript && latestTranscript.length > 0;
-        setFinalScore({
-          accuracy: hasRealData ? latestAccuracy : 0,
-          confidence: hasRealData ? latestConfidence : 0,
-          transcript: hasRealData ? latestTranscript : "No speech detected. Please try again."
-        });
-        setShowFeedback(true);
-      }, 400);
-    }
-  }, [stopListening]);
 
   const handleNextPhrase = () => {
     setCurrentPhraseIndex((prev) => (prev + 1) % tutorPhrases.length);
