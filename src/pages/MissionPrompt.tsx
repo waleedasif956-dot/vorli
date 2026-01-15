@@ -63,7 +63,49 @@ const MissionPrompt = () => {
     isRecordingRef.current = isRecording;
   }, [isRecording]);
 
+  // If the user reaches a strong match while still holding the mic,
+  // auto-finish so the results screen appears immediately.
+  const autoEndedRef = useRef(false);
+
+  const handleRecordEnd = useCallback(() => {
+    if (isRecordingRef.current) {
+      setIsRecording(false);
+      stopListening();
+
+      // Small delay to ensure we have the latest transcript data
+      setTimeout(() => {
+        const {
+          transcript: latestTranscript,
+          accuracy: latestAccuracy,
+          confidence: latestConfidence,
+        } = latestDataRef.current;
+        const hasRealData = latestTranscript && latestTranscript.length > 0;
+        setFinalScore({
+          accuracy: hasRealData ? latestAccuracy : 0,
+          confidence: hasRealData ? latestConfidence : 0,
+          transcript: hasRealData
+            ? latestTranscript
+            : "No speech detected. Please try again and speak clearly.",
+        });
+        setShowResults(true);
+      }, 400);
+    }
+  }, [stopListening]);
+
+  useEffect(() => {
+    if (!isRecording) return;
+    if (autoEndedRef.current) return;
+    if (!transcript) return;
+
+    // Treat 90%+ as “completed correctly” for auto-finish.
+    if (accuracy >= 90) {
+      autoEndedRef.current = true;
+      handleRecordEnd();
+    }
+  }, [isRecording, transcript, accuracy, handleRecordEnd]);
+
   const handleRecordStart = useCallback(() => {
+    autoEndedRef.current = false;
     setIsRecording(true);
     setShowHint(false);
     resetSpeech();
@@ -72,25 +114,6 @@ const MissionPrompt = () => {
       startListening();
     }, 100);
   }, [startListening, resetSpeech]);
-
-  const handleRecordEnd = useCallback(() => {
-    if (isRecordingRef.current) {
-      setIsRecording(false);
-      stopListening();
-      
-      // Small delay to ensure we have the latest transcript data
-      setTimeout(() => {
-        const { transcript: latestTranscript, accuracy: latestAccuracy, confidence: latestConfidence } = latestDataRef.current;
-        const hasRealData = latestTranscript && latestTranscript.length > 0;
-        setFinalScore({
-          accuracy: hasRealData ? latestAccuracy : 0,
-          confidence: hasRealData ? latestConfidence : 0,
-          transcript: hasRealData ? latestTranscript : "No speech detected. Please try again and speak clearly."
-        });
-        setShowResults(true);
-      }, 400);
-    }
-  }, [stopListening]);
 
   const handleNext = () => {
     if (currentPromptIndex < totalPrompts - 1) {
