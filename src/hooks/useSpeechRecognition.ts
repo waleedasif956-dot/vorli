@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { calculateAccuracy } from "@/lib/speechAccuracy";
 
 interface UseSpeechRecognitionOptions {
   targetText?: string;
@@ -13,39 +14,6 @@ interface SpeechRecognitionResult {
   error: string | null;
 }
 
-// Calculate accuracy between spoken text and target text
-const calculateAccuracy = (spoken: string, target: string): number => {
-  if (!target || !spoken) return 0;
-  
-  const normalize = (str: string) => str.toLowerCase().trim().replace(/[^a-z\s]/g, '');
-  const spokenNorm = normalize(spoken);
-  const targetNorm = normalize(target);
-  
-  const spokenWords = spokenNorm.split(/\s+/).filter(w => w.length > 0);
-  const targetWords = targetNorm.split(/\s+/).filter(w => w.length > 0);
-  
-  if (targetWords.length === 0) return 0;
-  
-  let matchedWords = 0;
-  const usedIndices = new Set<number>();
-  
-  spokenWords.forEach(spokenWord => {
-    targetWords.forEach((targetWord, idx) => {
-      if (!usedIndices.has(idx)) {
-        // Exact match or close match (allowing for minor differences)
-        if (spokenWord === targetWord || 
-            (spokenWord.length > 2 && targetWord.length > 2 && 
-             (spokenWord.includes(targetWord) || targetWord.includes(spokenWord)))) {
-          matchedWords++;
-          usedIndices.add(idx);
-        }
-      }
-    });
-  });
-  
-  const accuracy = Math.min((matchedWords / targetWords.length) * 100, 100);
-  return Math.round(accuracy);
-};
 
 export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) => {
   const { targetText = "", language = "en-US" } = options;
@@ -120,40 +88,44 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
 
     recognition.onresult = (event: any) => {
       if (isStoppingRef.current) return;
-      
-      let finalTranscript = "";
+
       let interimTranscript = "";
       let maxConfidence = 0;
 
-      // Build full transcript from all results
-      for (let i = 0; i < event.results.length; i++) {
-        const result = event.results[i];
-        const transcript = result[0].transcript;
-        const confidence = result[0].confidence;
-        
-        if (result.isFinal) {
-          finalTranscript += transcript + " ";
-          maxConfidence = Math.max(maxConfidence, confidence);
+      /**
+       * IMPORTANT: On mobile (and in some desktop browsers), `event.results` contains the
+       * full history on every callback. Iterating from 0 causes repeated words.
+       * Use `event.resultIndex` to process only the new results.
+       */
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        const alt = res?.[0];
+        if (!alt) continue;
+
+        const nextText = (alt.transcript || "").trim();
+        const nextConfidence = typeof alt.confidence === "number" ? alt.confidence : undefined;
+
+        if (res.isFinal) {
+          if (nextText) {
+            // Accumulate ONLY new final chunks
+            fullTranscriptRef.current = (fullTranscriptRef.current + " " + nextText).trim();
+          }
+          if (nextConfidence !== undefined) maxConfidence = Math.max(maxConfidence, nextConfidence);
         } else {
-          interimTranscript += transcript;
-          maxConfidence = Math.max(maxConfidence, confidence || 0.8);
+          interimTranscript += nextText ? nextText + " " : "";
+          maxConfidence = Math.max(maxConfidence, nextConfidence ?? 0.8);
         }
       }
 
-      // Store final transcript for accumulation
-      if (finalTranscript) {
-        fullTranscriptRef.current = finalTranscript.trim();
-      }
+      const cleanTranscript = [fullTranscriptRef.current, interimTranscript.trim()]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
 
-      const displayTranscript = fullTranscriptRef.current 
-        ? fullTranscriptRef.current + " " + interimTranscript 
-        : interimTranscript;
-      
-      const cleanTranscript = displayTranscript.trim();
       const confidencePercent = Math.round((maxConfidence || 0.8) * 100);
       const accuracyPercent = calculateAccuracy(cleanTranscript, targetText);
 
-      setResult(prev => ({
+      setResult((prev) => ({
         ...prev,
         transcript: cleanTranscript,
         confidence: confidencePercent,
