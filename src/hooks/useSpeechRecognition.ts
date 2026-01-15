@@ -28,7 +28,9 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   
   const recognitionRef = useRef<any>(null);
   const isStoppingRef = useRef(false);
-  const fullTranscriptRef = useRef("");
+  // Track processed result indices to avoid duplicates on Android
+  const processedResultsRef = useRef<Set<number>>(new Set());
+  const finalPartsRef = useRef<string[]>([]);
   
   const isSupported = typeof window !== "undefined" && 
     ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
@@ -63,13 +65,17 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     }
 
     isStoppingRef.current = false;
-    fullTranscriptRef.current = "";
+    processedResultsRef.current = new Set();
+    finalPartsRef.current = [];
 
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
     
-    recognition.continuous = true;
+    // On Android, continuous mode causes severe duplication issues
+    // Use non-continuous mode and restart manually for better results
+    const isAndroid = /android/i.test(navigator.userAgent);
+    recognition.continuous = !isAndroid;
     recognition.interimResults = true;
     recognition.lang = language;
     recognition.maxAlternatives = 1;
@@ -89,39 +95,39 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     recognition.onresult = (event: any) => {
       if (isStoppingRef.current) return;
 
-      let interimTranscript = "";
+      let currentInterim = "";
       let maxConfidence = 0;
 
-      /**
-       * IMPORTANT: On mobile (and in some desktop browsers), `event.results` contains the
-       * full history on every callback. Iterating from 0 causes repeated words.
-       * Use `event.resultIndex` to process only the new results.
-       */
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      // Process all results but track which final results we've already captured
+      for (let i = 0; i < event.results.length; i++) {
         const res = event.results[i];
         const alt = res?.[0];
         if (!alt) continue;
 
-        const nextText = (alt.transcript || "").trim();
-        const nextConfidence = typeof alt.confidence === "number" ? alt.confidence : undefined;
+        const text = (alt.transcript || "").trim();
+        const conf = typeof alt.confidence === "number" ? alt.confidence : 0.8;
 
         if (res.isFinal) {
-          if (nextText) {
-            // Accumulate ONLY new final chunks
-            fullTranscriptRef.current = (fullTranscriptRef.current + " " + nextText).trim();
+          // Only add this final result if we haven't processed this index before
+          if (!processedResultsRef.current.has(i) && text) {
+            processedResultsRef.current.add(i);
+            finalPartsRef.current.push(text);
+            maxConfidence = Math.max(maxConfidence, conf);
           }
-          if (nextConfidence !== undefined) maxConfidence = Math.max(maxConfidence, nextConfidence);
         } else {
-          interimTranscript += nextText ? nextText + " " : "";
-          maxConfidence = Math.max(maxConfidence, nextConfidence ?? 0.8);
+          // For interim results, only take the latest one (last non-final result)
+          currentInterim = text;
+          maxConfidence = Math.max(maxConfidence, conf);
         }
       }
 
-      const cleanTranscript = [fullTranscriptRef.current, interimTranscript.trim()]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
-
+      // Build the complete transcript from unique final parts + current interim
+      const allParts = [...finalPartsRef.current];
+      if (currentInterim) {
+        allParts.push(currentInterim);
+      }
+      
+      const cleanTranscript = allParts.join(" ").trim();
       const confidencePercent = Math.round((maxConfidence || 0.8) * 100);
       const accuracyPercent = calculateAccuracy(cleanTranscript, targetText);
 
@@ -169,7 +175,8 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   }, [isSupported, language, targetText]);
 
   const reset = useCallback(() => {
-    fullTranscriptRef.current = "";
+    processedResultsRef.current = new Set();
+    finalPartsRef.current = [];
     setResult({
       transcript: "",
       confidence: 0,
