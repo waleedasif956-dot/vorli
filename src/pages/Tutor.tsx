@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mic, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,17 @@ const Tutor = () => {
     language: "en-US"
   });
 
+  // Use refs to always get the latest values when recording ends
+  const latestDataRef = useRef({ transcript, accuracy, confidence });
+  useEffect(() => {
+    latestDataRef.current = { transcript, accuracy, confidence };
+  }, [transcript, accuracy, confidence]);
+
+  const isRecordingRef = useRef(isRecording);
+  useEffect(() => {
+    isRecordingRef.current = isRecording;
+  }, [isRecording]);
+
   const handleRecordStart = useCallback(() => {
     setIsRecording(true);
     setShowFeedback(false);
@@ -48,21 +59,23 @@ const Tutor = () => {
   }, [startListening, resetSpeech]);
 
   const handleRecordEnd = useCallback(() => {
-    if (isRecording) {
+    if (isRecordingRef.current) {
       setIsRecording(false);
       stopListening();
       
+      // Small delay to ensure we have the latest transcript data
       setTimeout(() => {
-        const hasRealData = transcript && transcript.length > 0;
+        const { transcript: latestTranscript, accuracy: latestAccuracy, confidence: latestConfidence } = latestDataRef.current;
+        const hasRealData = latestTranscript && latestTranscript.length > 0;
         setFinalScore({
-          accuracy: hasRealData ? accuracy : 0,
-          confidence: hasRealData ? confidence : 0,
-          transcript: hasRealData ? transcript : "No speech detected. Please try again."
+          accuracy: hasRealData ? latestAccuracy : 0,
+          confidence: hasRealData ? latestConfidence : 0,
+          transcript: hasRealData ? latestTranscript : "No speech detected. Please try again."
         });
         setShowFeedback(true);
-      }, 300);
+      }, 400);
     }
-  }, [isRecording, stopListening, accuracy, confidence, transcript]);
+  }, [stopListening]);
 
   const handleNextPhrase = () => {
     setCurrentPhraseIndex((prev) => (prev + 1) % tutorPhrases.length);
