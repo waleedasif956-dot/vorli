@@ -54,28 +54,39 @@ const Tutor = () => {
   const autoEndedRef = useRef(false);
 
   const handleRecordEnd = useCallback(() => {
-    if (isRecordingRef.current) {
-      setIsRecording(false);
-      stopListening();
+    if (!isRecordingRef.current) return;
 
-      // Small delay to ensure we have the latest transcript data
-      setTimeout(() => {
-        const {
-          transcript: latestTranscript,
-          accuracy: latestAccuracy,
-          confidence: latestConfidence,
-        } = latestDataRef.current;
-        const hasRealData = latestTranscript && latestTranscript.length > 0;
-        setFinalScore({
-          accuracy: hasRealData ? latestAccuracy : 0,
-          confidence: hasRealData ? latestConfidence : 0,
-          transcript: hasRealData
-            ? latestTranscript
-            : "No speech detected. Please try again.",
-        });
-        setShowFeedback(true);
-      }, 400);
-    }
+    // Freeze the best-known values at the moment we decide to end.
+    // This prevents later state updates (or late events) from overwriting
+    // the score with empty/zero.
+    const snapshotAtEnd = { ...latestDataRef.current };
+
+    setIsRecording(false);
+    stopListening();
+
+    // Small delay to allow final speech events to flush.
+    setTimeout(() => {
+      const latest = latestDataRef.current;
+
+      // Prefer whichever transcript is longer (often the “final” one).
+      const bestTranscript =
+        (latest.transcript || "").trim().length >= (snapshotAtEnd.transcript || "").trim().length
+          ? latest.transcript
+          : snapshotAtEnd.transcript;
+
+      const bestAccuracy =
+        bestTranscript === latest.transcript ? latest.accuracy : snapshotAtEnd.accuracy;
+      const bestConfidence =
+        bestTranscript === latest.transcript ? latest.confidence : snapshotAtEnd.confidence;
+
+      const hasRealData = bestTranscript && bestTranscript.trim().length > 0;
+      setFinalScore({
+        accuracy: hasRealData ? bestAccuracy : 0,
+        confidence: hasRealData ? bestConfidence : 0,
+        transcript: hasRealData ? bestTranscript : "No speech detected. Please try again.",
+      });
+      setShowFeedback(true);
+    }, 400);
   }, [stopListening]);
 
   useEffect(() => {
