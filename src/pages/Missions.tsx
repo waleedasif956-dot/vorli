@@ -1,7 +1,6 @@
-import { Target, Filter } from "lucide-react";
 import MissionCard from "@/components/MissionCard";
 import BottomNavigation from "@/components/BottomNavigation";
-import { Button } from "@/components/ui/button";
+import AppHeader from "@/components/AppHeader";
 
 const allMissions = [
   { id: "1", title: "Order coffee politely", category: "Travel", duration: "~40 sec", level: "A1–A2" },
@@ -19,18 +18,7 @@ const Missions = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="max-w-md mx-auto px-4 pt-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 animate-fade-in">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="w-5 h-5 text-primary" />
-              <span className="text-primary font-medium text-sm">All Missions</span>
-            </div>
-            <h1 className="text-2xl font-bold text-foreground">Missions</h1>
-          </div>
-          <Button variant="outline" size="icon" className="rounded-xl border-border">
-            <Filter className="w-4 h-4" />
-          </Button>
-        </div>
+        <AppHeader title="All Missions" />
 
         {/* Categories */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 animate-slide-up">

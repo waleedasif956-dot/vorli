@@ -3,6 +3,7 @@ import { Rocket, Mic, BarChart3, Flame, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
 import { LineChart, Line, XAxis, ResponsiveContainer } from "recharts";
+import AppHeader from "@/components/AppHeader";
 
 const chartData = [
   { week: "Week 1", progress: 8 },
@@ -43,11 +44,9 @@ const Progress = () => {
   
   return (
     <div className="min-h-screen bg-background pb-28">
-      <div className="max-w-md mx-auto px-4 pt-10">
+      <div className="max-w-md mx-auto px-4 pt-8">
         {/* Header */}
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-3xl font-bold text-foreground">Your progress</h1>
-        </div>
+        <AppHeader title="Your Progress" />
 
         {/* Chart */}
         <div className="mb-8 animate-scale-in h-52 relative">

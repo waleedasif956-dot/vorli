@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, MapPin, BarChart3 } from "lucide-react";
+import { Clock, MapPin, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
+import AppHeader from "@/components/AppHeader";
 
 const missionData: Record<string, { title: string; category: string; location: string; duration: string; level: string; description: string }> = {
   "1": {
@@ -37,15 +38,9 @@ const MissionDetails = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-md mx-auto px-4 pt-6">
-        {/* Back button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
-        </button>
+      <div className="max-w-md mx-auto px-4 pt-8">
+        {/* Header */}
+        <AppHeader title="Mission Details" showBack />
 
         {/* Mission info */}
         <div className="animate-fade-in">
