@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mic, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BottomNavigation from "@/components/BottomNavigation";
 import AudioWaveform from "@/components/AudioWaveform";
 import AppHeader from "@/components/AppHeader";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 const tutorPhrases = [
   { phrase: "Good morning, how are you today?", phonetic: "good MOR-ning, how ar yoo tuh-DAY" },
@@ -19,27 +20,70 @@ const Tutor = () => {
   const [playbackSpeed, setPlaybackSpeed] = useState<"normal" | "slow">("normal");
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [score] = useState(Math.floor(Math.random() * 15) + 82);
+  const [finalScore, setFinalScore] = useState({ accuracy: 0, confidence: 0, transcript: "" });
 
   const currentPhrase = tutorPhrases[currentPhraseIndex];
+
+  const {
+    transcript,
+    confidence,
+    accuracy,
+    isListening,
+    startListening,
+    stopListening,
+    reset: resetSpeech,
+    isSupported
+  } = useSpeechRecognition({
+    targetText: currentPhrase.phrase,
+    language: "en-US"
+  });
 
   const handleRecordStart = useCallback(() => {
     setIsRecording(true);
     setShowFeedback(false);
-  }, []);
+    resetSpeech();
+    setTimeout(() => {
+      startListening();
+    }, 100);
+  }, [startListening, resetSpeech]);
 
   const handleRecordEnd = useCallback(() => {
     if (isRecording) {
       setIsRecording(false);
-      setTimeout(() => setShowFeedback(true), 300);
+      stopListening();
+      
+      setTimeout(() => {
+        const hasRealData = transcript && transcript.length > 0;
+        setFinalScore({
+          accuracy: hasRealData ? accuracy : 0,
+          confidence: hasRealData ? confidence : 0,
+          transcript: hasRealData ? transcript : "No speech detected. Please try again."
+        });
+        setShowFeedback(true);
+      }, 300);
     }
-  }, [isRecording]);
+  }, [isRecording, stopListening, accuracy, confidence, transcript]);
 
   const handleNextPhrase = () => {
     setCurrentPhraseIndex((prev) => (prev + 1) % tutorPhrases.length);
     setShowFeedback(false);
     setShowPhonetics(false);
+    resetSpeech();
   };
+
+  const handleTryAgain = () => {
+    setShowFeedback(false);
+    resetSpeech();
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopListening();
+    };
+  }, [stopListening]);
+
+  const overallScore = Math.round((finalScore.accuracy + finalScore.confidence) / 2);
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -113,6 +157,13 @@ const Tutor = () => {
           </Button>
         </div>
 
+        {/* Speech not supported warning */}
+        {!isSupported && (
+          <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-sm text-center">
+            Speech recognition not supported in this browser. Try Chrome or Safari.
+          </div>
+        )}
+
         {/* Mic Button */}
         <div className="flex flex-col items-center mb-4 animate-fade-in">
           <button
@@ -128,34 +179,85 @@ const Tutor = () => {
               <div className="absolute inset-0 rounded-full border-4 border-primary/30 animate-ping" />
             )}
           </button>
+          <span className="text-muted-foreground text-sm mt-2">
+            {isRecording ? "Release to finish" : "Hold to speak"}
+          </span>
         </div>
 
-        {/* Recording Waveform */}
+        {/* Recording State with Live Transcript */}
         {isRecording && (
           <div className="animate-fade-in mb-4">
-            <AudioWaveform isActive={isRecording} barCount={30} />
+            <AudioWaveform isActive={isListening} barCount={30} />
+            
+            {/* Live transcript display */}
+            {transcript && (
+              <div className="mt-4 p-4 rounded-2xl bg-muted/30 border border-primary/30 animate-fade-in">
+                <p className="text-xs text-primary mb-1">You're saying:</p>
+                <p className="text-foreground font-medium">"{transcript}"</p>
+                {accuracy > 0 && (
+                  <div className="flex items-center gap-4 mt-2 text-xs">
+                    <span className="text-muted-foreground">Accuracy: <span className="text-primary font-medium">{accuracy}%</span></span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
         {/* Feedback */}
         {showFeedback && (
-          <div className="glass-card rounded-2xl p-4 flex items-center justify-between animate-scale-in">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-accent">
-                <span className="text-lg font-bold text-background">{score}%</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Great pronunciation!</p>
-                <p className="text-xs text-muted-foreground">Keep practicing</p>
+          <div className="glass-card rounded-2xl p-4 animate-scale-in">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-accent">
+                  <span className="text-lg font-bold text-background">{overallScore}%</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {overallScore >= 90 ? "Excellent!" : overallScore >= 75 ? "Great job!" : overallScore >= 50 ? "Good effort!" : "Keep practicing!"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Overall Score</p>
+                </div>
               </div>
             </div>
-            <Button
-              onClick={handleNextPhrase}
-              size="sm"
-              className="rounded-xl bg-primary hover:bg-primary/90"
-            >
-              Next
-            </Button>
+            
+            {/* What you said */}
+            {finalScore.transcript && (
+              <div className="mb-3 p-3 rounded-xl bg-muted/30 border border-border/50">
+                <p className="text-xs text-muted-foreground mb-1">What you said:</p>
+                <p className="text-foreground text-sm">"{finalScore.transcript}"</p>
+              </div>
+            )}
+
+            {/* Score breakdown */}
+            <div className="flex gap-4 mb-3 text-xs">
+              <div className="flex-1 p-2 rounded-lg bg-muted/50 text-center">
+                <p className="text-muted-foreground">Accuracy</p>
+                <p className="font-medium text-foreground">{finalScore.accuracy}%</p>
+              </div>
+              <div className="flex-1 p-2 rounded-lg bg-muted/50 text-center">
+                <p className="text-muted-foreground">Confidence</p>
+                <p className="font-medium text-foreground">{finalScore.confidence}%</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={handleTryAgain}
+                variant="outline"
+                size="sm"
+                className="flex-1 rounded-xl"
+              >
+                Try Again
+              </Button>
+              <Button
+                onClick={handleNextPhrase}
+                size="sm"
+                className="flex-1 rounded-xl bg-primary hover:bg-primary/90"
+              >
+                Next
+              </Button>
+            </div>
           </div>
         )}
       </div>
