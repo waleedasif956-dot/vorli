@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface AudioWaveformProps {
   isActive: boolean;
@@ -18,6 +18,8 @@ const AudioWaveform = ({
   voiceDetected = false
 }: AudioWaveformProps) => {
   const [heights, setHeights] = useState<number[]>(Array(barCount).fill(4));
+  const targetHeightsRef = useRef<number[]>(Array(barCount).fill(4));
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     // If real audio levels are provided, use them
@@ -27,24 +29,70 @@ const AudioWaveform = ({
     }
 
     // If we're active AND voice is detected (for simulated mode on Android),
-    // show animated waveform - just like web behavior
+    // show animated waveform - just like web behavior with smooth interpolation
     if (isActive && voiceDetected) {
-      const tick = () => {
-        setHeights(
-          Array.from({ length: barCount }, () => {
-            // 4% baseline, up to ~80%
-            return 4 + Math.random() * 76;
-          })
-        );
+      // Generate new target heights every 150ms (slower than before)
+      const generateTargets = () => {
+        targetHeightsRef.current = Array.from({ length: barCount }, () => {
+          // 10% baseline, up to ~85%
+          return 10 + Math.random() * 75;
+        });
       };
 
-      tick();
-      const id = window.setInterval(tick, 80);
-      return () => window.clearInterval(id);
+      generateTargets();
+      const targetInterval = window.setInterval(generateTargets, 150);
+
+      // Smooth interpolation loop at 60fps
+      const smoothUpdate = () => {
+        setHeights(prev => {
+          const targets = targetHeightsRef.current;
+          return prev.map((h, i) => {
+            const target = targets[i] ?? 4;
+            // Lerp towards target with easing factor (0.15 = smooth, 0.3 = snappier)
+            const easing = 0.18;
+            return h + (target - h) * easing;
+          });
+        });
+        animationRef.current = requestAnimationFrame(smoothUpdate);
+      };
+
+      animationRef.current = requestAnimationFrame(smoothUpdate);
+
+      return () => {
+        window.clearInterval(targetInterval);
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
     }
 
-    // Flat bars when not active or no voice detected
-    setHeights(Array(barCount).fill(4));
+    // Flat bars when not active or no voice detected - smooth transition down
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    targetHeightsRef.current = Array(barCount).fill(4);
+    
+    // Smooth fade to flat
+    const fadeDown = () => {
+      setHeights(prev => {
+        const allFlat = prev.every(h => h <= 5);
+        if (allFlat) {
+          return Array(barCount).fill(4);
+        }
+        return prev.map(h => h + (4 - h) * 0.2);
+      });
+      
+      animationRef.current = requestAnimationFrame(fadeDown);
+    };
+    
+    animationRef.current = requestAnimationFrame(fadeDown);
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [isActive, barCount, audioLevels, voiceDetected]);
 
   return (
@@ -56,7 +104,7 @@ const AudioWaveform = ({
           style={{
             height: `${Math.max(4, height)}%`,
             background: isActive && height > 10 ? "var(--gradient-primary)" : "hsl(var(--muted-foreground) / 0.3)",
-            transition: "height 0.05s ease-out, background 0.15s ease",
+            transition: "background 0.15s ease",
           }}
         />
       ))}
