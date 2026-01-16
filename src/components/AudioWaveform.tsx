@@ -14,35 +14,29 @@ const AudioWaveform = ({
   className = "",
   audioLevels 
 }: AudioWaveformProps) => {
-  const [heights, setHeights] = useState<number[]>(Array(barCount).fill(20));
+  const [heights, setHeights] = useState<number[]>(Array(barCount).fill(4));
 
   useEffect(() => {
     // If real audio levels are provided, use them
-    if (audioLevels && audioLevels.length > 0) {
+    if (audioLevels && audioLevels.length > 0 && isActive) {
       setHeights(audioLevels);
       return;
     }
 
-    // Fallback: static bars when not active
-    if (!isActive) {
-      setHeights(Array(barCount).fill(20));
-    }
+    // Flat bars when not active or no audio
+    setHeights(Array(barCount).fill(4));
   }, [isActive, barCount, audioLevels]);
-
-  // Determine if we have real audio input
-  const hasRealAudio = audioLevels && audioLevels.length > 0;
-  const showActive = isActive && (hasRealAudio || audioLevels === undefined);
 
   return (
     <div className={`flex items-center justify-center gap-1 h-16 ${className}`}>
       {heights.map((height, i) => (
         <div
           key={i}
-          className="w-1 rounded-full transition-all duration-75"
+          className="w-1 rounded-full"
           style={{
-            height: `${height}%`,
-            background: "var(--gradient-primary)",
-            opacity: showActive ? 1 : 0.3,
+            height: `${Math.max(4, height)}%`,
+            background: isActive && height > 10 ? "var(--gradient-primary)" : "hsl(var(--muted-foreground) / 0.3)",
+            transition: "height 0.05s ease-out, background 0.15s ease",
           }}
         />
       ))}
