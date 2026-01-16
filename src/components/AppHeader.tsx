@@ -49,8 +49,8 @@ const AppHeader = ({
           </div>
         )}
 
-        {/* Center: Title */}
-        <h1 className="text-lg font-semibold gradient-text text-center flex-1 mx-4">
+        {/* Center: Title - positioned absolutely for true centering */}
+        <h1 className="absolute left-1/2 -translate-x-1/2 text-lg font-semibold gradient-text text-center whitespace-nowrap">
           {title}
         </h1>
 
