@@ -265,11 +265,12 @@ const Tutor = () => {
         {/* Recording State with Live Transcript */}
         {isRecording && (
           <div className="animate-fade-in mb-4">
-            {/* On Android we skip real audio levels to avoid mic conflicts; pass undefined to trigger simulated waveform */}
+            {/* On Android we skip real audio levels to avoid mic conflicts; use voiceDetected to animate only when speaking */}
             <AudioWaveform 
               isActive={isListening} 
               barCount={30} 
-              audioLevels={/android/i.test(navigator.userAgent) ? undefined : audioLevels} 
+              audioLevels={/android/i.test(navigator.userAgent) ? undefined : audioLevels}
+              voiceDetected={transcript.length > 0}
             />
             
             {/* Live transcript display */}
