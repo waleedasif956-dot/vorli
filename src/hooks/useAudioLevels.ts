@@ -8,7 +8,17 @@ interface UseAudioLevelsOptions {
 export const useAudioLevels = (options: UseAudioLevelsOptions = {}) => {
   const { barCount = 5, sensitivity = 2.5 } = options;
   
-  const [levels, setLevels] = useState<number[]>(Array(barCount).fill(4));
+  // Store barCount in a ref to avoid issues with changing values
+  const barCountRef = useRef(barCount);
+  const sensitivityRef = useRef(sensitivity);
+  
+  // Update refs when props change
+  useEffect(() => {
+    barCountRef.current = barCount;
+    sensitivityRef.current = sensitivity;
+  }, [barCount, sensitivity]);
+  
+  const [levels, setLevels] = useState<number[]>(() => Array(barCount).fill(4));
   const [isActive, setIsActive] = useState(false);
   
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -21,6 +31,9 @@ export const useAudioLevels = (options: UseAudioLevelsOptions = {}) => {
 
   const startListening = useCallback(async () => {
     try {
+      const currentBarCount = barCountRef.current;
+      const currentSensitivity = sensitivityRef.current;
+      
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -38,21 +51,24 @@ export const useAudioLevels = (options: UseAudioLevelsOptions = {}) => {
       source.connect(analyser);
 
       setIsActive(true);
-      smoothedLevelsRef.current = Array(barCount).fill(4);
+      smoothedLevelsRef.current = Array(currentBarCount).fill(4);
 
       // Animation loop to read audio levels
       const updateLevels = () => {
         if (!analyserRef.current) return;
 
+        const bc = barCountRef.current;
+        const sens = sensitivityRef.current;
+        
         const bufferLength = analyserRef.current.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
         analyserRef.current.getByteFrequencyData(dataArray);
 
         // Calculate levels for each bar based on frequency ranges
         const newLevels: number[] = [];
-        const segmentSize = Math.floor(bufferLength / barCount);
+        const segmentSize = Math.floor(bufferLength / bc);
 
-        for (let i = 0; i < barCount; i++) {
+        for (let i = 0; i < bc; i++) {
           let sum = 0;
           const start = i * segmentSize;
           const end = start + segmentSize;
@@ -71,12 +87,18 @@ export const useAudioLevels = (options: UseAudioLevelsOptions = {}) => {
             normalized = 4; // Flat when below threshold
           } else {
             // Map threshold-255 to 10-95 with sensitivity
-            normalized = Math.min(95, ((avg - threshold) / (255 - threshold)) * 85 * sensitivity + 10);
+            normalized = Math.min(95, ((avg - threshold) / (255 - threshold)) * 85 * sens + 10);
+          }
+          
+          // Ensure smoothedLevelsRef has correct length
+          if (smoothedLevelsRef.current.length !== bc) {
+            smoothedLevelsRef.current = Array(bc).fill(4);
           }
           
           // Smooth interpolation for fluid animation
           const smoothing = 0.3;
-          const smoothed = smoothedLevelsRef.current[i] + (normalized - smoothedLevelsRef.current[i]) * smoothing;
+          const prevValue = smoothedLevelsRef.current[i] ?? 4;
+          const smoothed = prevValue + (normalized - prevValue) * smoothing;
           smoothedLevelsRef.current[i] = smoothed;
           
           newLevels.push(Math.round(smoothed));
@@ -91,7 +113,7 @@ export const useAudioLevels = (options: UseAudioLevelsOptions = {}) => {
       console.error("Failed to access microphone for audio levels:", err);
       setIsActive(false);
     }
-  }, [barCount, sensitivity]);
+  }, []);
 
   const stopListening = useCallback(() => {
     if (animationRef.current) {
@@ -110,11 +132,13 @@ export const useAudioLevels = (options: UseAudioLevelsOptions = {}) => {
     }
 
     analyserRef.current = null;
-    smoothedLevelsRef.current = Array(barCount).fill(4);
+    
+    const bc = barCountRef.current;
+    smoothedLevelsRef.current = Array(bc).fill(4);
     
     setIsActive(false);
-    setLevels(Array(barCount).fill(4));
-  }, [barCount]);
+    setLevels(Array(bc).fill(4));
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
