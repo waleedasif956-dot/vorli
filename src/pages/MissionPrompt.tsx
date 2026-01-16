@@ -132,18 +132,7 @@ const MissionPrompt = () => {
     setShowHint(false);
     resetSpeech();
 
-    // Android Chrome often fails to produce SpeechRecognition transcripts if
-    // getUserMedia() is active at the same time (audio level meter).
-    // So on Android we prioritize SpeechRecognition and rely on a simulated
-    // waveform animation.
-    const isAndroid = /android/i.test(navigator.userAgent);
-
-    if (isAndroid) {
-      startListening();
-      return;
-    }
-
-    // On desktop/iOS: use real audio levels + speech recognition.
+    // Start real audio levels + speech recognition (Android included)
     startAudioLevels();
     setTimeout(() => {
       startListening();
