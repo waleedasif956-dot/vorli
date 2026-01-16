@@ -118,7 +118,18 @@ const Tutor = () => {
     setShowFeedback(false);
     resetSpeech();
 
-    // Start real audio levels + speech recognition (Android included)
+    // Android Chrome often fails to deliver SpeechRecognition results if
+    // getUserMedia() is also active (our audio-level meter).
+    // So on Android we prioritize SpeechRecognition and use a simulated
+    // waveform animation (see AudioWaveform) instead of real mic levels.
+    const isAndroid = /android/i.test(navigator.userAgent);
+
+    if (isAndroid) {
+      startListening();
+      return;
+    }
+
+    // On desktop/iOS: use real audio levels + speech recognition.
     startAudioLevels();
     setTimeout(() => {
       startListening();
