@@ -117,11 +117,11 @@ const CameraLearn = () => {
   return (
     <div className="min-h-screen bg-background pb-28">
       <div className="max-w-md mx-auto px-4 pt-8">
-        {/* Header with Beta label */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex-1">
-            <AppHeader title="Camera Learn" showBack showAvatar={false} />
-          </div>
+        {/* Header */}
+        <AppHeader title="Camera Learn" showBack showAvatar={false} />
+        
+        {/* Beta label */}
+        <div className="flex justify-center mb-2">
           <span className="text-xs font-medium text-muted-foreground bg-muted/60 px-2 py-1 rounded-full border border-border/50">
             Beta
           </span>
