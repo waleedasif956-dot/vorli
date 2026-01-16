@@ -19,6 +19,14 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      
+      {/* Prototype watermark */}
+      <div className="fixed top-4 right-4 z-50 px-2 py-1 rounded-md bg-muted/80 backdrop-blur-sm border border-border/50">
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+          Prototype
+        </span>
+      </div>
+      
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
