@@ -131,24 +131,23 @@ const MissionPrompt = () => {
     setIsRecording(true);
     setShowHint(false);
     resetSpeech();
-    
-    // On Android, start speech recognition FIRST before audio levels
-    // to avoid microphone access conflicts
+
+    // Android Chrome often fails to produce SpeechRecognition transcripts if
+    // getUserMedia() is active at the same time (audio level meter).
+    // So on Android we prioritize SpeechRecognition and rely on a simulated
+    // waveform animation.
     const isAndroid = /android/i.test(navigator.userAgent);
-    
+
     if (isAndroid) {
-      // On Android: Start speech recognition first, then audio levels with delay
       startListening();
-      setTimeout(() => {
-        startAudioLevels();
-      }, 200);
-    } else {
-      // On desktop/iOS: Start both together
-      startAudioLevels();
-      setTimeout(() => {
-        startListening();
-      }, 100);
+      return;
     }
+
+    // On desktop/iOS: use real audio levels + speech recognition.
+    startAudioLevels();
+    setTimeout(() => {
+      startListening();
+    }, 100);
   }, [startListening, resetSpeech, startAudioLevels]);
 
   const handleNext = () => {

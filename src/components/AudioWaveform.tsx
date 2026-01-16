@@ -23,6 +23,23 @@ const AudioWaveform = ({
       return;
     }
 
+    // If we're active but don't have real levels (e.g. Android where we
+    // avoid getUserMedia conflicts), show a simulated waveform.
+    if (isActive) {
+      const tick = () => {
+        setHeights(
+          Array.from({ length: barCount }, () => {
+            // 4% baseline, up to ~80%
+            return 4 + Math.random() * 76;
+          })
+        );
+      };
+
+      tick();
+      const id = window.setInterval(tick, 80);
+      return () => window.clearInterval(id);
+    }
+
     // Flat bars when not active or no audio
     setHeights(Array(barCount).fill(4));
   }, [isActive, barCount, audioLevels]);
