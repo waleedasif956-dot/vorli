@@ -79,6 +79,11 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     recognition.interimResults = true;
     recognition.lang = language;
     recognition.maxAlternatives = 1;
+    
+    // Android-specific: Add longer service URI timeout
+    if (isAndroid && recognition.serviceURI !== undefined) {
+      recognition.serviceURI = ""; // Reset to default
+    }
 
     recognition.onstart = () => {
       if (isStoppingRef.current) return;
@@ -147,6 +152,14 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
       if (event.error === "aborted" || event.error === "no-speech") {
         return;
       }
+      
+      // On Android, "network" errors can happen but recognition may still work
+      // Don't stop listening, just log
+      if (event.error === "network") {
+        console.warn("Speech recognition network warning (may still work):", event.error);
+        return;
+      }
+      
       console.error("Speech recognition error:", event.error);
       setResult(prev => ({ 
         ...prev, 
@@ -158,12 +171,20 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     recognition.onend = () => {
       // Auto-restart if not intentionally stopped and still should be listening
       if (!isStoppingRef.current && recognitionRef.current) {
-        try {
-          recognition.start();
-        } catch (e) {
-          // Can't restart, that's fine
-          setResult(prev => ({ ...prev, isListening: false }));
-        }
+        // On Android, add a small delay before restarting to prevent rapid cycling
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const restartDelay = isAndroid ? 100 : 0;
+        
+        setTimeout(() => {
+          if (!isStoppingRef.current && recognitionRef.current) {
+            try {
+              recognition.start();
+            } catch (e) {
+              // Can't restart, that's fine
+              setResult(prev => ({ ...prev, isListening: false }));
+            }
+          }
+        }, restartDelay);
       } else {
         setResult(prev => ({ ...prev, isListening: false }));
       }

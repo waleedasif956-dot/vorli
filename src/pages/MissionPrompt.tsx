@@ -131,11 +131,24 @@ const MissionPrompt = () => {
     setIsRecording(true);
     setShowHint(false);
     resetSpeech();
-    startAudioLevels();
-    // Small delay to ensure reset is complete before starting
-    setTimeout(() => {
+    
+    // On Android, start speech recognition FIRST before audio levels
+    // to avoid microphone access conflicts
+    const isAndroid = /android/i.test(navigator.userAgent);
+    
+    if (isAndroid) {
+      // On Android: Start speech recognition first, then audio levels with delay
       startListening();
-    }, 100);
+      setTimeout(() => {
+        startAudioLevels();
+      }, 200);
+    } else {
+      // On desktop/iOS: Start both together
+      startAudioLevels();
+      setTimeout(() => {
+        startListening();
+      }, 100);
+    }
   }, [startListening, resetSpeech, startAudioLevels]);
 
   const handleNext = () => {
