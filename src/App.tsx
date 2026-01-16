@@ -20,12 +20,6 @@ const App = () => (
       <Toaster />
       <Sonner />
       
-      {/* Prototype watermark - subtle, inside app area */}
-      <div className="fixed top-14 right-4 z-40 px-2 py-0.5 rounded-md bg-muted/60 backdrop-blur-sm border border-border/30">
-        <span className="text-[9px] font-medium text-muted-foreground/70 uppercase tracking-wide">
-          Prototype
-        </span>
-      </div>
       
       <BrowserRouter>
         <Routes>

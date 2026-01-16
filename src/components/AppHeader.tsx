@@ -54,22 +54,29 @@ const AppHeader = ({
           {title}
         </h1>
 
-        {/* Right: Avatar or Settings */}
-        {showSettings ? (
-          <button className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted/50 border border-border/50 backdrop-blur-sm text-primary hover:bg-muted transition-colors">
-            <Settings className="w-5 h-5" />
-          </button>
-        ) : showAvatar ? (
-          <div className="relative group">
-            {/* Avatar glow ring */}
-            <div className="absolute -inset-0.5 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" style={{ background: "var(--gradient-primary)" }} />
-            <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-muted to-card flex items-center justify-center border border-border/30 overflow-hidden">
-              <span className="text-lg">👤</span>
+        {/* Right: Prototype badge + Avatar or Settings */}
+        <div className="flex items-center gap-2">
+          {/* Prototype badge */}
+          <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted/40 border border-border/30">
+            Prototype
+          </span>
+          
+          {showSettings ? (
+            <button className="flex items-center justify-center w-10 h-10 rounded-xl bg-muted/50 border border-border/50 backdrop-blur-sm text-primary hover:bg-muted transition-colors">
+              <Settings className="w-5 h-5" />
+            </button>
+          ) : showAvatar ? (
+            <div className="relative group">
+              {/* Avatar glow ring */}
+              <div className="absolute -inset-0.5 rounded-full opacity-60 group-hover:opacity-100 transition-opacity" style={{ background: "var(--gradient-primary)" }} />
+              <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-muted to-card flex items-center justify-center border border-border/30 overflow-hidden">
+                <span className="text-lg">👤</span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="w-10" />
-        )}
+          ) : (
+            <div className="w-10" />
+          )}
+        </div>
       </div>
     </div>
   );
