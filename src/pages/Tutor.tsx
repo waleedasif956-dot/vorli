@@ -248,11 +248,25 @@ const Tutor = () => {
         {/* Mic Button */}
         <div className="flex flex-col items-center mb-4 animate-fade-in">
           <button
-            onMouseDown={handleRecordStart}
-            onMouseUp={handleRecordEnd}
-            onMouseLeave={handleRecordEnd}
-            onTouchStart={handleRecordStart}
-            onTouchEnd={handleRecordEnd}
+            onPointerDown={(e) => {
+              // Prevent duplicate mouse+touch event sequences on mobile
+              e.preventDefault();
+              // Only respond to primary button for mouse
+              if (e.pointerType === "mouse" && (e as any).button !== 0) return;
+              handleRecordStart();
+            }}
+            onPointerUp={(e) => {
+              e.preventDefault();
+              handleRecordEnd();
+            }}
+            onPointerLeave={(e) => {
+              e.preventDefault();
+              handleRecordEnd();
+            }}
+            onPointerCancel={(e) => {
+              e.preventDefault();
+              handleRecordEnd();
+            }}
             className={`mic-button w-20 h-20 ${isRecording ? "animate-pulse-glow scale-110" : ""}`}
           >
             <Mic className="w-8 h-8 text-background transition-transform duration-200" />
