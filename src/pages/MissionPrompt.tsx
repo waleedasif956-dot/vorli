@@ -132,18 +132,21 @@ const MissionPrompt = () => {
     setShowHint(false);
     resetSpeech();
 
-    // Android Chrome often fails to produce SpeechRecognition transcripts if
-    // getUserMedia() is active at the same time (audio level meter).
-    // So on Android we prioritize SpeechRecognition and rely on a simulated
-    // waveform animation.
+    // Android: Some Chrome builds have trouble when SpeechRecognition and
+    // getUserMedia() start at the exact same time. Starting recognition first
+    // and then attaching the analyser a moment later tends to be more reliable.
     const isAndroid = /android/i.test(navigator.userAgent);
 
     if (isAndroid) {
       startListening();
+      // Start the real mic-driven waveform shortly after recognition starts.
+      setTimeout(() => {
+        startAudioLevels();
+      }, 250);
       return;
     }
 
-    // On desktop/iOS: use real audio levels + speech recognition.
+    // Desktop/iOS: start the analyser first, then speech recognition.
     startAudioLevels();
     setTimeout(() => {
       startListening();
