@@ -269,8 +269,7 @@ const Tutor = () => {
             <AudioWaveform 
               isActive={isListening} 
               barCount={30} 
-              audioLevels={/android/i.test(navigator.userAgent) ? undefined : audioLevels}
-              voiceDetected={transcript.length > 0}
+              audioLevels={audioLevels}
             />
             
             {/* Live transcript display */}
