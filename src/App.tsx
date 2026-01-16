@@ -20,9 +20,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       
-      {/* Prototype watermark */}
-      <div className="fixed top-4 right-4 z-50 px-2 py-1 rounded-md bg-muted/80 backdrop-blur-sm border border-border/50">
-        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+      {/* Prototype watermark - fixed position, always visible */}
+      <div className="fixed top-2 right-2 z-[9999] px-2.5 py-1 rounded-full bg-amber-500/90 shadow-lg">
+        <span className="text-[10px] font-semibold text-white uppercase tracking-wider">
           Prototype
         </span>
       </div>
