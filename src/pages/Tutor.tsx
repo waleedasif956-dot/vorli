@@ -140,39 +140,31 @@ const Tutor = () => {
         {/* Header */}
         <AppHeader title="AI Tutor" showBack showSettings />
 
-        {/* Tutor Video Area */}
-        <div className="relative rounded-3xl overflow-hidden mb-4 animate-scale-in aspect-[3/4]">
-          {/* Tutor image/video placeholder */}
+        {/* Tutor Avatar Area - Static illustrated style */}
+        <div className="relative rounded-3xl overflow-hidden mb-4 animate-scale-in aspect-[4/3]">
           <div 
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(180deg, hsl(30 20% 92%) 0%, hsl(30 15% 88%) 100%)"
-            }}
+            className="absolute inset-0 bg-gradient-to-b from-muted/50 to-muted/80"
           >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-9xl">👩‍🏫</span>
+            {/* Simple illustrated AI avatar - static, no fake animation */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
+                <Volume2 className="w-10 h-10 text-primary" />
+              </div>
+              <span className="text-sm font-medium text-muted-foreground">AI Tutor</span>
             </div>
           </div>
 
-          {/* AI Voice Live badge */}
-          <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-muted/90 backdrop-blur-sm border border-border/50 flex items-center gap-2">
-            <Volume2 className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium text-foreground">AI voice · Live</span>
-          </div>
-
-          {/* Mouth overlay indicator */}
-          <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2 w-24 h-20 rounded-full border-2 border-primary/40" />
-
-          {/* Waveform at bottom of video */}
-          <div className="absolute bottom-4 left-4 right-4">
-            <AudioWaveform isActive={!isRecording} barCount={20} className="opacity-60" />
+          {/* Status badge */}
+          <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-background/90 backdrop-blur-sm border border-border/50 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-primary" />
+            <span className="text-xs font-medium text-foreground">Ready</span>
           </div>
         </div>
 
-        {/* Instruction Pill */}
+        {/* Instruction Pill - Safe text, no lip-sync implication */}
         <div className="flex justify-center mb-3 animate-fade-in">
-          <div className="px-4 py-2 rounded-full bg-primary text-white text-sm font-medium">
-            Watch my mouth and repeat after me.
+          <div className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium">
+            Listen and repeat after me.
           </div>
         </div>
 
