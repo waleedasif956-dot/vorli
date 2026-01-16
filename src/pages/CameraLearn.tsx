@@ -117,8 +117,15 @@ const CameraLearn = () => {
   return (
     <div className="min-h-screen bg-background pb-28">
       <div className="max-w-md mx-auto px-4 pt-8">
-        {/* Header */}
-        <AppHeader title="Camera Learn" showBack showAvatar={false} />
+        {/* Header with Beta label */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex-1">
+            <AppHeader title="Camera Learn" showBack showAvatar={false} />
+          </div>
+          <span className="text-xs font-medium text-muted-foreground bg-muted/60 px-2 py-1 rounded-full border border-border/50">
+            Beta
+          </span>
+        </div>
 
         {/* Instruction Pill */}
         <div className="flex justify-center mb-4 animate-fade-in">
@@ -140,22 +147,31 @@ const CameraLearn = () => {
             />
           ) : (
             <div 
-              className="absolute inset-0"
-              style={{
-                background: "linear-gradient(180deg, hsl(30 20% 95%) 0%, hsl(30 15% 90%) 100%)"
-              }}
+              className="absolute inset-0 bg-muted/80"
             >
-              {/* Fallback simulated desk items */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+              {/* Honest fallback - no fake content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8">
                 {error ? (
                   <>
                     <AlertCircle className="w-12 h-12 text-muted-foreground/50" />
-                    <p className="text-muted-foreground text-sm text-center px-8">
-                      Camera access needed. Allow camera permission or use demo mode.
+                    <p className="text-muted-foreground text-sm text-center">
+                      Camera access required to scan objects.
                     </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={startCamera}
+                      className="mt-2"
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Enable Camera
+                    </Button>
                   </>
                 ) : (
-                  <div className="text-8xl opacity-50 space-x-4">💻☕📓</div>
+                  <>
+                    <Loader2 className="w-8 h-8 text-muted-foreground/50 animate-spin" />
+                    <p className="text-muted-foreground text-sm">Starting camera...</p>
+                  </>
                 )}
               </div>
             </div>
