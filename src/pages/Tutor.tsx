@@ -22,8 +22,13 @@ const Tutor = () => {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
   const [finalScore, setFinalScore] = useState({ accuracy: 0, confidence: 0, transcript: "" });
+  
+  // Track voice activity for Android simulated waveform
+  const [voiceDetected, setVoiceDetected] = useState(false);
+  const lastTranscriptRef = useRef("");
 
   const currentPhrase = tutorPhrases[currentPhraseIndex];
+  const isAndroid = typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
 
   const {
     transcript,
@@ -39,12 +44,33 @@ const Tutor = () => {
     language: "en-US"
   });
 
-  // Real audio levels for waveform visualization
+  // Real audio levels for waveform visualization (desktop/iOS only)
   const { 
     levels: audioLevels, 
     startListening: startAudioLevels, 
     stopListening: stopAudioLevels 
   } = useAudioLevels({ barCount: 30, sensitivity: 2 });
+
+  // Detect voice activity based on transcript changes (for Android simulated waveform)
+  useEffect(() => {
+    if (!isAndroid || !isRecording) {
+      setVoiceDetected(false);
+      return;
+    }
+    
+    // Voice is detected when transcript is changing
+    if (transcript !== lastTranscriptRef.current) {
+      lastTranscriptRef.current = transcript;
+      setVoiceDetected(true);
+      
+      // Keep voice detected active for a short period after last change
+      const timeout = setTimeout(() => {
+        setVoiceDetected(false);
+      }, 600);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [transcript, isRecording, isAndroid]);
 
   // Use refs to always get the latest values when recording ends
   const latestDataRef = useRef({ transcript, accuracy, confidence });
@@ -116,19 +142,14 @@ const Tutor = () => {
     autoEndedRef.current = false;
     setIsRecording(true);
     setShowFeedback(false);
+    setVoiceDetected(false);
+    lastTranscriptRef.current = "";
     resetSpeech();
 
-    // Android: Some Chrome builds have trouble when SpeechRecognition and
-    // getUserMedia() start at the exact same time. Starting recognition first
-    // and then attaching the analyser a moment later tends to be more reliable.
-    const isAndroid = /android/i.test(navigator.userAgent);
-
+    // Android: Use only SpeechRecognition (no real audio levels) to avoid mic conflicts.
+    // The waveform will be simulated based on voice detection.
     if (isAndroid) {
       startListening();
-      // Start the real mic-driven waveform shortly after recognition starts.
-      setTimeout(() => {
-        startAudioLevels();
-      }, 250);
       return;
     }
 
@@ -137,7 +158,7 @@ const Tutor = () => {
     setTimeout(() => {
       startListening();
     }, 100);
-  }, [startListening, resetSpeech, startAudioLevels]);
+  }, [startListening, resetSpeech, startAudioLevels, isAndroid]);
 
   const handleNextPhrase = () => {
     setCurrentPhraseIndex((prev) => (prev + 1) % tutorPhrases.length);
@@ -282,11 +303,12 @@ const Tutor = () => {
         {/* Recording State with Live Transcript */}
         {isRecording && (
           <div className="animate-fade-in mb-4">
-            {/* On Android we skip real audio levels to avoid mic conflicts; use voiceDetected to animate only when speaking */}
+            {/* On Android: use simulated waveform with voiceDetected. On desktop: use real audio levels */}
             <AudioWaveform 
               isActive={isListening} 
               barCount={30} 
-              audioLevels={audioLevels}
+              audioLevels={isAndroid ? undefined : audioLevels}
+              voiceDetected={isAndroid ? voiceDetected : false}
             />
             
             {/* Live transcript display */}
