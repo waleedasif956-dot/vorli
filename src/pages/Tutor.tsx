@@ -140,17 +140,36 @@ const Tutor = () => {
         {/* Header */}
         <AppHeader title="AI Tutor" showBack showSettings />
 
-        {/* Tutor Avatar Area - Static illustrated style */}
+        {/* Tutor Avatar Area - Simple illustrated character */}
         <div className="relative rounded-3xl overflow-hidden mb-4 animate-scale-in aspect-[4/3]">
           <div 
-            className="absolute inset-0 bg-gradient-to-b from-muted/50 to-muted/80"
+            className="absolute inset-0 bg-gradient-to-b from-primary/5 to-primary/10"
           >
-            {/* Simple illustrated AI avatar - static, no fake animation */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-              <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center">
-                <Volume2 className="w-10 h-10 text-primary" />
+            {/* Illustrated avatar - friendly cartoon style */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              {/* Simple illustrated face */}
+              <div className="relative">
+                {/* Head */}
+                <div className="w-28 h-28 rounded-full bg-amber-100 border-4 border-amber-200 flex items-center justify-center relative overflow-hidden">
+                  {/* Hair */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-12 bg-amber-800 rounded-t-full" />
+                  {/* Face */}
+                  <div className="relative mt-4">
+                    {/* Eyes */}
+                    <div className="flex gap-5 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-stone-800" />
+                      <div className="w-3 h-3 rounded-full bg-stone-800" />
+                    </div>
+                    {/* Smile */}
+                    <div className="w-6 h-3 border-b-2 border-stone-700 rounded-b-full mx-auto" />
+                  </div>
+                </div>
+                {/* Headphones */}
+                <div className="absolute top-3 -left-2 w-5 h-8 bg-primary rounded-full" />
+                <div className="absolute top-3 -right-2 w-5 h-8 bg-primary rounded-full" />
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-28 h-4 border-t-4 border-primary rounded-t-full" />
               </div>
-              <span className="text-sm font-medium text-muted-foreground">AI Tutor</span>
+              <span className="text-sm font-medium text-foreground mt-2">AI Tutor</span>
             </div>
           </div>
 
