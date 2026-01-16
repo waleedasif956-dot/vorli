@@ -169,7 +169,7 @@ const Tutor = () => {
                 <div className="absolute top-3 -right-2 w-5 h-8 bg-primary rounded-full" />
                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-28 h-4 border-t-4 border-primary rounded-t-full" />
               </div>
-              <span className="text-sm font-medium text-foreground mt-2">AI Tutor</span>
+              
             </div>
           </div>
 
