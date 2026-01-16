@@ -398,11 +398,24 @@ const MissionPrompt = () => {
           {/* Mic Button */}
           <div className="flex flex-col items-center mb-6">
             <button
-              onMouseDown={handleRecordStart}
-              onMouseUp={handleRecordEnd}
-              onMouseLeave={handleRecordEnd}
-              onTouchStart={handleRecordStart}
-              onTouchEnd={handleRecordEnd}
+              onPointerDown={(e) => {
+                // Prevent duplicate mouse+touch event sequences on mobile
+                e.preventDefault();
+                if (e.pointerType === "mouse" && (e as any).button !== 0) return;
+                handleRecordStart();
+              }}
+              onPointerUp={(e) => {
+                e.preventDefault();
+                handleRecordEnd();
+              }}
+              onPointerLeave={(e) => {
+                e.preventDefault();
+                handleRecordEnd();
+              }}
+              onPointerCancel={(e) => {
+                e.preventDefault();
+                handleRecordEnd();
+              }}
               className={`mic-button w-24 h-24 ${isRecording ? "animate-pulse-glow scale-110" : ""}`}
             >
               <Mic className="w-10 h-10 text-background transition-transform duration-200" />
