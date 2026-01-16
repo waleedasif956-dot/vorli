@@ -6,6 +6,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import AudioWaveform from "@/components/AudioWaveform";
 import AppHeader from "@/components/AppHeader";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useAudioLevels } from "@/hooks/useAudioLevels";
 
 const tutorPhrases = [
   { phrase: "Good morning, how are you today?", phonetic: "good MOR-ning, how ar yoo tuh-DAY" },
@@ -38,6 +39,13 @@ const Tutor = () => {
     language: "en-US"
   });
 
+  // Real audio levels for waveform visualization
+  const { 
+    levels: audioLevels, 
+    startListening: startAudioLevels, 
+    stopListening: stopAudioLevels 
+  } = useAudioLevels({ barCount: 30, sensitivity: 2 });
+
   // Use refs to always get the latest values when recording ends
   const latestDataRef = useRef({ transcript, accuracy, confidence });
   useEffect(() => {
@@ -63,6 +71,7 @@ const Tutor = () => {
 
     setIsRecording(false);
     stopListening();
+    stopAudioLevels();
 
     // Small delay to allow final speech events to flush.
     setTimeout(() => {
@@ -87,7 +96,7 @@ const Tutor = () => {
       });
       setShowFeedback(true);
     }, 400);
-  }, [stopListening]);
+  }, [stopListening, stopAudioLevels]);
 
   useEffect(() => {
     if (!isRecording) return;
@@ -108,10 +117,11 @@ const Tutor = () => {
     setIsRecording(true);
     setShowFeedback(false);
     resetSpeech();
+    startAudioLevels();
     setTimeout(() => {
       startListening();
     }, 100);
-  }, [startListening, resetSpeech]);
+  }, [startListening, resetSpeech, startAudioLevels]);
 
   const handleNextPhrase = () => {
     setCurrentPhraseIndex((prev) => (prev + 1) % tutorPhrases.length);
@@ -242,7 +252,7 @@ const Tutor = () => {
         {/* Recording State with Live Transcript */}
         {isRecording && (
           <div className="animate-fade-in mb-4">
-            <AudioWaveform isActive={isListening} barCount={30} />
+            <AudioWaveform isActive={isListening} barCount={30} audioLevels={audioLevels} />
             
             {/* Live transcript display */}
             {transcript && (

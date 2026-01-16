@@ -6,6 +6,7 @@ import AudioWaveform from "@/components/AudioWaveform";
 import RecordingTimer from "@/components/RecordingTimer";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import AppHeader from "@/components/AppHeader";
+import { useAudioLevels } from "@/hooks/useAudioLevels";
 
 const prompts: Record<string, { text: string; hint: string }[]> = {
   "1": [
@@ -52,6 +53,13 @@ const MissionPrompt = () => {
     language: "en-US" 
   });
 
+  // Real audio levels for waveform visualization
+  const { 
+    levels: audioLevels, 
+    startListening: startAudioLevels, 
+    stopListening: stopAudioLevels 
+  } = useAudioLevels({ barCount: 7, sensitivity: 2 });
+
   // Use refs to always get the latest values when recording ends
   const latestDataRef = useRef({ transcript, accuracy, confidence });
   useEffect(() => {
@@ -77,6 +85,7 @@ const MissionPrompt = () => {
 
     setIsRecording(false);
     stopListening();
+    stopAudioLevels();
 
     // Small delay to allow final speech events to flush.
     setTimeout(() => {
@@ -103,7 +112,7 @@ const MissionPrompt = () => {
       });
       setShowResults(true);
     }, 400);
-  }, [stopListening]);
+  }, [stopListening, stopAudioLevels]);
 
   useEffect(() => {
     if (!isRecording) return;
@@ -122,11 +131,12 @@ const MissionPrompt = () => {
     setIsRecording(true);
     setShowHint(false);
     resetSpeech();
+    startAudioLevels();
     // Small delay to ensure reset is complete before starting
     setTimeout(() => {
       startListening();
     }, 100);
-  }, [startListening, resetSpeech]);
+  }, [startListening, resetSpeech, startAudioLevels]);
 
   const handleNext = () => {
     if (currentPromptIndex < totalPrompts - 1) {
@@ -338,7 +348,7 @@ const MissionPrompt = () => {
           {isRecording && (
             <div className="mb-6 animate-fade-in w-full">
               <RecordingTimer isRecording={isRecording} />
-              <AudioWaveform isActive={isListening} barCount={7} className="mt-4" />
+              <AudioWaveform isActive={isListening} barCount={7} className="mt-4" audioLevels={audioLevels} />
               
               {/* Live transcript display */}
               {transcript && (
