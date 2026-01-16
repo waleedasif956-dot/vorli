@@ -6,13 +6,16 @@ interface AudioWaveformProps {
   className?: string;
   /** Real audio levels from microphone (0-100 for each bar) */
   audioLevels?: number[];
+  /** Whether voice is currently being detected (for simulated mode) */
+  voiceDetected?: boolean;
 }
 
 const AudioWaveform = ({ 
   isActive, 
   barCount = 5, 
   className = "",
-  audioLevels 
+  audioLevels,
+  voiceDetected = false
 }: AudioWaveformProps) => {
   const [heights, setHeights] = useState<number[]>(Array(barCount).fill(4));
 
@@ -23,9 +26,9 @@ const AudioWaveform = ({
       return;
     }
 
-    // If we're active but don't have real levels (e.g. Android where we
-    // avoid getUserMedia conflicts), show a simulated waveform.
-    if (isActive) {
+    // If we're active AND voice is detected (for simulated mode on Android),
+    // show animated waveform - just like web behavior
+    if (isActive && voiceDetected) {
       const tick = () => {
         setHeights(
           Array.from({ length: barCount }, () => {
@@ -40,9 +43,9 @@ const AudioWaveform = ({
       return () => window.clearInterval(id);
     }
 
-    // Flat bars when not active or no audio
+    // Flat bars when not active or no voice detected
     setHeights(Array(barCount).fill(4));
-  }, [isActive, barCount, audioLevels]);
+  }, [isActive, barCount, audioLevels, voiceDetected]);
 
   return (
     <div className={`flex items-center justify-center gap-1 h-16 ${className}`}>

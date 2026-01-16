@@ -360,12 +360,13 @@ const MissionPrompt = () => {
           {isRecording && (
             <div className="mb-6 animate-fade-in w-full">
               <RecordingTimer isRecording={isRecording} />
-              {/* On Android we skip real audio levels to avoid mic conflicts; pass undefined to trigger simulated waveform */}
+              {/* On Android we skip real audio levels to avoid mic conflicts; use voiceDetected to animate only when speaking */}
               <AudioWaveform 
                 isActive={isListening} 
                 barCount={7} 
                 className="mt-4" 
-                audioLevels={/android/i.test(navigator.userAgent) ? undefined : audioLevels} 
+                audioLevels={/android/i.test(navigator.userAgent) ? undefined : audioLevels}
+                voiceDetected={transcript.length > 0}
               />
               
               {/* Live transcript display */}
