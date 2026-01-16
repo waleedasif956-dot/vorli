@@ -206,12 +206,7 @@ const Tutor = () => {
           </Button>
         </div>
 
-        {/* Speech not supported warning */}
-        {!isSupported && (
-          <div className="mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-sm text-center">
-            Speech recognition not supported in this browser. Try Chrome or Safari.
-          </div>
-        )}
+        {/* Speech recognition warning hidden for demo/video purposes */}
 
         {/* Mic Button */}
         <div className="flex flex-col items-center mb-4 animate-fade-in">
